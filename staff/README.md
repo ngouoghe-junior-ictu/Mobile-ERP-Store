@@ -3,7 +3,8 @@
 ## MAIN MENU
 
 
-![MainMenu](https://user-images.githubusercontent.com/117815821/207939942-4d2a4d17-67d6-4d8d-95ae-f5a13a9690d4.png)
+![Capture d’écran (47)](https://user-images.githubusercontent.com/117815821/207942351-441c6555-b181-4441-9d66-b878eb8c854d.png)
+
 
 
 
@@ -57,10 +58,8 @@
 
 
 
+![Capture d’écran (24)](https://user-images.githubusercontent.com/117815821/207943422-eb2ac08e-9df7-4c81-850b-d98cd7fad593.png)
 
 
 
 
-QT MOBILE APP FOR EMPLOYEE MANAGEMENT
-
-USES SQLITE DATABASE![Capture d’écran (25)](https://user-images.githubusercontent.com/117815821/203166294-1f41eb13-7947-4e9d-ab70-dc544c31e316.png)
