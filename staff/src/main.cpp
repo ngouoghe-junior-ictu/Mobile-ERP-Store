@@ -344,39 +344,168 @@ void showCalendar(int month, int year){
     calendar.showMonth();
 }
 
-void displayEmployee(Employee employee){
-    cout << "id: " << employee.id <<" name: " << employee.name << " phone: "<< employee.phonenumber;
-}
-
 class StaffWorkingHours{
-    
-    int states [5] = {0,1,2,3,4};
+
+    // 0 represents the home with all the employees
+    // 1 represents the home without any employee
+    // 2 represents the calendar's page
+    // 3 represents the working hours for a particular date
+    // 4 represents the no working hours for a particular date
+    // 5 represents the pick start and end time page
+
+    int states [6] = {0,1,2,3,4,5};
     Employee employee;
-    WorkingHour workingHour; 
-    Calendar calendar;
-    
-    void displayEmployee(Employee employee){
-        cout << "id: " << employee.id <<" name: " << employee.name << " phone: "<< employee.phonenumber;
+    WorkingHour workingHour;
+    Calendar calendar = Calendar(2022);
+    string leftSpace = "     ";
+    string titleMarker = "__________";
+    string elementSpacing = "  ";
+
+    void displayEmployee(Employee employee, int index){
+        cout << leftSpace << index << elementSpacing << employee.name << elementSpacing << employee.phonenumber << "\n";
     }
-    
+
+    Employee getEmployeeFromListIndex(list<Employee> employees, int index){
+            list<Employee>::iterator it = employees.begin();
+            for(int i=0; i<index; i++){
+                ++it;
+            }
+            return *it;
+    }
+
     void goToHome(){
+
+        string userInput = "";
+        list<string> commands = {};
+        int range[] = {1, 1};
+        string question = "Enter an employee's number";
+        string errorMessage = "Invalid Input";
+
+        SQLiteManager sqliteManager = SQLiteManager();
+        list<Employee> employees = sqliteManager.getAllEmployees();
+        range[1] = employees.size();
+
+        system("CLS");
+        displayEmployees(employees);
+        cout << "\n\n" << leftSpace << question << "\n" << leftSpace;
+        cin >> userInput;
+
+        while(!listContains(commands, userInput) && !inputInRange(range, userInput) ){
+            system("CLS");
+            displayEmployees(employees);
+            cout << "\n\n" << leftSpace << errorMessage << "\n" << leftSpace << question << "\n" << leftSpace;
+            cin >> userInput;
+        }
+        employee = getEmployeeFromListIndex(employees, std::stoi( userInput));
+        displayState(1);
+    }
+
+
+
+    bool listContains( list<string> list, string toBeSearched){
+        if(list.size() > 0){
+            return (std::find(list.begin(), list.end(), toBeSearched) != list.end());
+        }
+        return false;
+    }
+
+    bool inputInRange(int range[], string userInput){
+        if(range[0] == range[1]){
+            return false;
+        }
+        try {
+            int intInput = std::stoi( userInput );
+            for(int i = range[0]; i <= range[1]; i ++){
+                if(intInput == i){
+                    return true;
+                }
+            }
+        } catch (...) {
+            return false;
+        }
+        return false;
+    }
+
+    void goToEmptyHome(){
         SQLiteManager sqliteManager = SQLiteManager();
         list<Employee> employees = sqliteManager.getAllEmployees();
         displayEmployees(employees);
     }
-    
+
+    void goToCalendar(){
+        SQLiteManager sqliteManager = SQLiteManager();
+        list<Employee> employees = sqliteManager.getAllEmployees();
+        displayEmployees(employees);
+    }
+
+    void goToWorkingHours(){
+        SQLiteManager sqliteManager = SQLiteManager();
+        list<Employee> employees = sqliteManager.getAllEmployees();
+        displayEmployees(employees);
+    }
+
+    void goToEmptyWorkingHours(){
+        SQLiteManager sqliteManager = SQLiteManager();
+        list<Employee> employees = sqliteManager.getAllEmployees();
+        displayEmployees(employees);
+    }
+
+    void goToStartNEndTime(){
+        SQLiteManager sqliteManager = SQLiteManager();
+        list<Employee> employees = sqliteManager.getAllEmployees();
+        displayEmployees(employees);
+    }
+
     void displayEmployees(list<Employee> employees){
+        cout << "\n" << leftSpace << titleMarker << "List of Employees" << titleMarker << "\n\n";
+        int i = 1;
         for(Employee employee: employees){
-            displayEmployee(employee);
+            displayEmployee(employee, i);
+            i++;
         }
     }
-    
-    int main(int argc, char *argv[])
+
+    void displayState(int state){
+
+        switch (state) {
+            case 0: {
+                goToHome();
+                break;
+            }
+
+            case 1: {
+                goToEmptyHome();
+                break;
+            }
+
+            case 2: {
+                goToCalendar();
+                break;
+            }
+
+            case 3: {
+                goToWorkingHours();
+                break;
+            }
+
+            case 4: {
+                goToEmptyWorkingHours();
+                break;
+            }
+
+            case 5: {
+                goToStartNEndTime();
+                break;
+            }
+        }
+    }
+
+public:int main(int argc, char *argv[])
     {
-        SQLiteManager sqliteManager = SQLiteManager();
-        sqliteManager.addEmployee("Jayson", "6557578");
-        list<Employee> employees = sqliteManager.getAllEmployees();
-        displayEmployees(employees)
+        //SQLiteManager sqliteManager = SQLiteManager();
+        //list<Employee> employees = sqliteManager.getAllEmployees();
+        displayState(0);
+        //displayEmployees(employees);
         /*list<WorkingHour> workingHours = sqliteManager.getEmployeeWorkingHoursByIdAndDate(1, "yesterday");
         sqliteManager.addEmployeeWorkingHour(1, "yesterday", 2000, 2100, true);
         for(WorkingHour workingHour: workingHours){
@@ -384,14 +513,39 @@ class StaffWorkingHours{
             cout << "id : " << workingHour.id << "start time : " << workingHour.startTime << "end time : " << workingHour.endTime;
             cout << "\n";
         }*/
-    
-        Calendar calendar = Calendar(2022);
-        calendar.setMonth(3);
-        calendar.showMonth();
-    
+
+        // Calendar calendar = Calendar(2022);
+        // calendar.setMonth(3);
+        // calendar.showMonth();
+
         QCoreApplication a(argc, argv);
         return a.exec();
     }
 };
+
+int main(int argc, char *argv[])
+{
+    //SQLiteManager sqliteManager = SQLiteManager();
+    //sqliteManager.addEmployee("Jayson", "6557578");
+    //list<Employee> employees = sqliteManager.getAllEmployees();
+    //displayState(0);
+    //displayEmployees(employees);
+    /*list<WorkingHour> workingHours = sqliteManager.getEmployeeWorkingHoursByIdAndDate(1, "yesterday");
+    sqliteManager.addEmployeeWorkingHour(1, "yesterday", 2000, 2100, true);
+    for(WorkingHour workingHour: workingHours){
+        //displayEmployee(employee);
+        cout << "id : " << workingHour.id << "start time : " << workingHour.startTime << "end time : " << workingHour.endTime;
+        cout << "\n";
+    }*/
+
+    // Calendar calendar = Calendar(2022);
+    // calendar.setMonth(3);
+    // calendar.showMonth();
+
+    //QCoreApplication a(argc, argv);
+    //return a.exec();
+    StaffWorkingHours staffWorkingHours = StaffWorkingHours();
+    staffWorkingHours.main(argc, argv);
+}
 
 
