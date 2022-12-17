@@ -427,9 +427,7 @@ class StaffWorkingHours{
     }
 
     void goToEmptyHome(){
-        SQLiteManager sqliteManager = SQLiteManager();
-        list<Employee> employees = sqliteManager.getAllEmployees();
-        displayEmployees(employees);
+        cout << leftSpace << "No employee found\n";
     }
 
     void goToCalendar(){
