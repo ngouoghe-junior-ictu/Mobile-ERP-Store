@@ -431,9 +431,35 @@ class StaffWorkingHours{
     }
 
     void goToCalendar(){
-        SQLiteManager sqliteManager = SQLiteManager();
-        list<Employee> employees = sqliteManager.getAllEmployees();
-        displayEmployees(employees);
+        string userInput = "";
+        int shownMonth = 0;
+        list<string> commands = {"b", "n"};
+        int range[] = {1, 1};
+        string question = "Pick a day";
+        string errorMessage = "Invalid Input";
+
+        //SQLiteManager sqliteManager = SQLiteManager();
+        //list<Employee> employees = sqliteManager.getAllEmployees();
+        range[1] = getMonthSize(shownMonth);
+
+        system("CLS");
+        calendar.setMonth(shownMonth);
+        calendar.showMonth();
+        cout << "\n\n" << leftSpace << question << "\n" << leftSpace;
+        cin >> userInput;
+
+        while(!listContains(commands, userInput) && !inputInRange(range, userInput) ){
+            if(inputInRange(range, userInput)){
+                
+            }
+                system("CLS");
+                calendar.setMonth(shownMonth);
+                calendar.showMonth();
+                cout << "\n\n" << leftSpace << errorMessage << "\n" << leftSpace << question << "\n" << leftSpace;
+                cin >> userInput;
+            
+        }
+        displayState(1);
     }
 
     void goToWorkingHours(){
