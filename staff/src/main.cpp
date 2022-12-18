@@ -475,9 +475,9 @@ class StaffWorkingHours{
     }
 
     void goToStartNEndTime(){
-        SQLiteManager sqliteManager = SQLiteManager();
-        list<Employee> employees = sqliteManager.getAllEmployees();
-        displayEmployees(employees);
+        // SQLiteManager sqliteManager = SQLiteManager();
+        // list<Employee> employees = sqliteManager.getAllEmployees();
+        // displayEmployees(employees);
     }
 
     void displayEmployees(list<Employee> employees){
