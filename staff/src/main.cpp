@@ -1,8 +1,11 @@
 #include <iostream>
+#include <sstream>
 #include <list>
 #include <string>
 #include "sqlite/sqlite3.h"
 #include <QCoreApplication>
+#include<cmath>
+#include <ctime>
 
 using namespace std;
 
@@ -221,20 +224,37 @@ class Calendar{
         this->year=year;
     }
 
+    int getYear(){
+        return year;
+    }
+
+    string getCurrentMonthName(){
+        return getMonthName(currentMonth);
+    }
+
+    int getCurrentMonth(){
+        return currentMonth;
+    }
+
     void showMonth(){
 
-        int current = dayNumber(1 , this->currentMonth , year);
+        int current = dayNumber(1 , this->currentMonth + 1 , year);
         int days = getNumberOfDays ( this->currentMonth , year);
+        string leftSpace = "     ";
 
         // Print the current month name
-        printf("\n  ------------%s-------------\n",
-               getMonthName ( this->currentMonth ).c_str());
+        cout << "\n" << leftSpace;
+        printf("  ---------- %s %i -----------\n\n",
+               getMonthName ( this->currentMonth ).c_str(), year);
 
         // Print the columns
-        printf("  Sun  Mon  Tue  Wed  Thu  Fri  Sat\n");
+        //printf("  Sun  Mon  Tue  Wed  Thu  Fri  Sat\n");
+        cout << leftSpace << "  Sun  Mon  Tue  Wed  Thu  Fri  Sat\n";
 
         // Print appropriate spaces
         int k;
+        cout << leftSpace;
+
         for (k = 0; k < current; k++)
             printf("     ");
 
@@ -245,7 +265,8 @@ class Calendar{
             if (++k > 6)
             {
                 k = 0;
-                printf("\n");
+                cout << "\n" << leftSpace;
+                //printf("\n");
             }
         }
 
@@ -256,6 +277,10 @@ class Calendar{
 
     void setMonth(int newMonth){
         this->currentMonth = newMonth;
+    }
+
+    void setYear(int newYear){
+        this->year = newYear;
     }
 
     int getNumberOfDays (int monthNumber, int year)
@@ -316,6 +341,64 @@ class Calendar{
         return (31);
     }
 
+    int getNumberOfDaysOfCurrentMonthAndYear ()
+    {
+        // January
+        if (currentMonth == 0)
+            return (31);
+
+        // February
+        if (currentMonth == 1)
+        {
+            // If the year is leap then February has
+            // 29 days
+            if (year % 400 == 0 ||
+                    (year % 4 == 0 && year % 100 != 0))
+                return (29);
+            else
+                return (28);
+        }
+
+        // March
+        if (currentMonth == 2)
+            return (31);
+
+        // April
+        if (currentMonth == 3)
+            return (30);
+
+        // May
+        if (currentMonth == 4)
+            return (31);
+
+        // June
+        if (currentMonth == 5)
+            return (30);
+
+        // July
+        if (currentMonth == 6)
+            return (31);
+
+        // August
+        if (currentMonth == 7)
+            return (31);
+
+        // September
+        if (currentMonth == 8)
+            return (30);
+
+        // October
+        if (currentMonth == 9)
+            return (31);
+
+        // November
+        if (currentMonth == 10)
+            return (30);
+
+        // December
+        return (31);
+    }
+
     string getMonthName(int monthNumber)
     {
         string months[] = {"January", "February", "March",
@@ -335,6 +418,44 @@ class Calendar{
         year -= month < 3;
         return ( year + year/4 - year/100 +
                  year/400 + t[month-1] + day) % 7;
+    }
+
+    void decrementMonth(){
+        if(currentMonth == 0){
+            currentMonth = 11;
+            year --;
+        }
+        else{
+            currentMonth --;
+        }
+    }
+
+    int getActualYear() {
+        time_t t = time(NULL);
+         tm* tPtr = localtime(&t);
+         return (tPtr->tm_year)+1900;
+    }
+
+    int getActualMonth() {
+        time_t t = time(NULL);
+         tm* tPtr = localtime(&t);
+         return (tPtr->tm_mon)+1;
+    }
+
+
+    void incrementMonth(){
+        if(currentMonth == 11){
+            currentMonth = 0;
+            year ++;
+        }
+        else{
+            currentMonth ++;
+        }
+    }
+
+    void init(){
+        currentMonth = getActualMonth() -1 ;
+        year = getActualYear();
     }
 };
 
@@ -360,9 +481,48 @@ class StaffWorkingHours{
     string leftSpace = "     ";
     string titleMarker = "__________";
     string elementSpacing = "  ";
+    int day;
 
     void displayEmployee(Employee employee, int index){
         cout << leftSpace << index << elementSpacing << employee.name << elementSpacing << employee.phonenumber << "\n";
+    }
+
+    void displayWorkingHour(WorkingHour workingHour, int index){
+        if(index >= 0){
+            cout << leftSpace << index << elementSpacing << formatTime(workingHour.startTime) << elementSpacing << formatTime(workingHour.endTime) << elementSpacing << formatPresence(workingHour.isPresent) + "\n";
+        }
+        else{
+            cout << elementSpacing << formatTime(workingHour.startTime) << elementSpacing << formatTime(workingHour.endTime) << elementSpacing << formatPresence(workingHour.isPresent) + "\n";
+        }
+    }
+
+    string formatTime(int time){
+
+        if (time/10 < 1){
+            return "00:0" + to_string(time);
+        }
+
+        else if (time/100 < 1){
+            return "00:" + to_string(time);
+        }
+
+        else if (time/1000 < 1){
+            return "0" + to_string(time/100) + ":" + to_string(time%100);
+        }
+
+        else {
+            return to_string(time/1000) + to_string( (time % 1000) /100) + ":" + ((time % 100) > 10? to_string(time%100) : "0" + to_string(time%100) );
+        }
+
+    }
+
+    string formatPresence(bool presence){
+
+        if(presence) {
+            return "present";
+        }
+        return "absent";
+
     }
 
     Employee getEmployeeFromListIndex(list<Employee> employees, int index){
@@ -373,34 +533,126 @@ class StaffWorkingHours{
             return *it;
     }
 
+    WorkingHour getWorkingHourFromListIndex(list<WorkingHour> workingHours, int index){
+            list<WorkingHour>::iterator it = workingHours.begin();
+            for(int i=0; i<index; i++){
+                ++it;
+            }
+            return *it;
+    }
+
     void goToHome(){
 
         string userInput = "";
         list<string> commands = {};
-        int range[] = {1, 1};
+        int range[] = {0, 0};
         string question = "Enter an employee's number";
         string errorMessage = "Invalid Input";
 
         SQLiteManager sqliteManager = SQLiteManager();
         list<Employee> employees = sqliteManager.getAllEmployees();
-        range[1] = employees.size();
+        if(employees.size() > 0){
+            range[1] = employees.size();
 
-        system("CLS");
-        displayEmployees(employees);
-        cout << "\n\n" << leftSpace << question << "\n" << leftSpace;
-        cin >> userInput;
-
-        while(!listContains(commands, userInput) && !inputInRange(range, userInput) ){
             system("CLS");
             displayEmployees(employees);
-            cout << "\n\n" << leftSpace << errorMessage << "\n" << leftSpace << question << "\n" << leftSpace;
+            cout << "\n\n" << leftSpace << question << "\n" << leftSpace;
             cin >> userInput;
+
+            while(!listContains(commands, userInput) && !inputInRange(range, userInput) ){
+                system("CLS");
+                displayEmployees(employees);
+                cout << "\n\n" << leftSpace << errorMessage << "\n" << leftSpace << question << "\n" << leftSpace;
+                cin >> userInput;
+            }
+            employee = getEmployeeFromListIndex(employees, std::stoi( userInput) - 1);
+            displayState(2);
         }
-        employee = getEmployeeFromListIndex(employees, std::stoi( userInput));
-        displayState(1);
+
+        else{
+            displayState(1);
+        }
+
     }
 
+    void goToWorkingHours(){
 
+        string userInput = "";
+        string userInput2 = "";
+        list<string> commands = {"add", "back"};
+        list<string> secondCommands = {"edit", "delete", "cancel"};
+        int range[] = {0, 0};
+        string question = "Enter 'add' to add a working hour or \n" +leftSpace+ "a working hour index to edit it.";
+        string question2 = "Enter 'edit' to modify this working hour or \n" +leftSpace+ "'delete' to remove it or cancel";
+        string errorMessage = "Invalid Input";
+
+        SQLiteManager sqliteManager = SQLiteManager();
+        list<WorkingHour> workingHours = sqliteManager.getEmployeeWorkingHoursByIdAndDate(employee.id, formatDate());
+        if(workingHours.size() > 0){
+            range[1] = workingHours.size();
+
+            system("CLS");
+            displayWorkingHours(workingHours);
+            cout << "\n\n" << leftSpace << question << "\n" << leftSpace;
+            cin >> userInput;
+
+            while(!listContains(commands, userInput) && !inputInRange(range, userInput) ){
+                system("CLS");
+                displayWorkingHours(workingHours);
+                cout << "\n\n" << leftSpace << errorMessage << "\n" << leftSpace << question << "\n" << leftSpace;
+                cin >> userInput;
+            }
+
+            if (listContains(commands, userInput)){
+                if(userInput == "add"){
+                    displayState(4);
+                }
+                else{
+                    displayState(2);
+                }
+            }
+
+            else{
+
+                workingHour = getWorkingHourFromListIndex(workingHours, stoi(userInput) - 1);
+                cout << "\n" << leftSpace;
+                displayWorkingHour(workingHour, -1);
+                cout << "\n" << leftSpace << question2 << "\n" << leftSpace;
+                cin >> userInput2;
+
+                while(!listContains(secondCommands, userInput2)){
+                    system("CLS");
+                    displayWorkingHours(workingHours);
+                    cout << "\n\n" << leftSpace << errorMessage << "\n" << leftSpace << question << "\n" << leftSpace << userInput << "\n\n";
+
+                    cout << leftSpace;
+                    displayWorkingHour(workingHour, -1);
+
+                    cout << "\n" << leftSpace << errorMessage << "\n" << leftSpace << question2 << "\n" << leftSpace;
+                    cin >> userInput2;
+                }
+
+                if(userInput2 == "edit"){
+                    displayState(5);
+                }
+
+                else if (userInput2 == "delete") {
+                    if(sqliteManager.deleteEmployeeWorkingHourById(workingHour.id)){
+                        displayState(3);
+                    }
+                }
+
+                else{
+                    displayState(3);
+                }
+            }
+
+        }
+        else{
+            displayState(6);
+        }
+
+    }
 
     bool listContains( list<string> list, string toBeSearched){
         if(list.size() > 0){
@@ -427,57 +679,283 @@ class StaffWorkingHours{
     }
 
     void goToEmptyHome(){
-        cout << leftSpace << "No employee found\n";
+        system("CLS");
+        cout << leftSpace << "No employee found\n" << leftSpace;
     }
 
     void goToCalendar(){
-        string userInput = "";
-        int shownMonth = 0;
-        list<string> commands = {"b", "n"};
-        int range[] = {1, 1};
-        string question = "Pick a day";
-        string errorMessage = "Invalid Input";
 
-        //SQLiteManager sqliteManager = SQLiteManager();
-        //list<Employee> employees = sqliteManager.getAllEmployees();
-        range[1] = getMonthSize(shownMonth);
+        string userInput = "";
+        list<string> commands = {"n", "p", "back"};
+        int range[] = {1, 1};
+        string question = "Choose the date to view the working hours of " + employee.name;
+        string errorMessage = "Invalid Input";
+        string description = "press 'p' to view the previous month and 'n' to view the next month";
+
+        calendar.init();
+        range[1] = calendar.getNumberOfDaysOfCurrentMonthAndYear();
 
         system("CLS");
-        calendar.setMonth(shownMonth);
         calendar.showMonth();
-        cout << "\n\n" << leftSpace << question << "\n" << leftSpace;
+
+        cout << "\n\n" << leftSpace << question << "\n" << leftSpace << description << "\n" << leftSpace;
         cin >> userInput;
 
-        while(!listContains(commands, userInput) && !inputInRange(range, userInput) ){
-            if(inputInRange(range, userInput)){
-                
-            }
+        while(!inputInRange(range, userInput) ){
+
+            if(listContains(commands, userInput)){
+                if(userInput == "p"){
+                    calendar.decrementMonth();
+                }
+                else if (userInput == "n"){
+                    calendar.incrementMonth();
+                }
+                else {
+                    break;
+                }
+                range[1] = calendar.getNumberOfDaysOfCurrentMonthAndYear();
                 system("CLS");
-                calendar.setMonth(shownMonth);
                 calendar.showMonth();
-                cout << "\n\n" << leftSpace << errorMessage << "\n" << leftSpace << question << "\n" << leftSpace;
+                cout << "\n\n" << leftSpace << question << "\n" << leftSpace << description << "\n" << leftSpace;
                 cin >> userInput;
-            
+            }
+            else{
+                system("CLS");
+                calendar.showMonth();
+                cout << "\n\n" << leftSpace << errorMessage << "\n" << leftSpace << question << "\n" << leftSpace << description << "\n" << leftSpace;
+                cin >> userInput;
+            }
         }
-        displayState(1);
+        if(userInput == "back"){
+            displayState(0);
+        }
+        else{
+            day = std::stoi( userInput );
+            displayState(3);
+        }
+
+
+
     }
 
-    void goToWorkingHours(){
-        SQLiteManager sqliteManager = SQLiteManager();
-        list<Employee> employees = sqliteManager.getAllEmployees();
-        displayEmployees(employees);
+    void goToAddWorkingHour(){
+
+        string userInput1 = "";
+        string userInput2 = "";
+        string userInput3 = "";
+        list<string> commands = {"a", "p"};
+        int range[] = {0, 2400};
+        string question1 = "Enter the start time of " + employee.name + " on the " + to_string(day) + " "+ calendar.getCurrentMonthName() + " " + to_string(calendar.getYear());
+        string question2 = "Enter the end time of " + employee.name + " on the " + to_string(day) + " "+ calendar.getCurrentMonthName() + " " + to_string(calendar.getYear());
+        string question3 = "Enter 'p' for present or 'a' for absent";
+        string errorMessage = "Invalid Input";
+        string secondErrorMessage = "The start time cannot be greater than the end time";
+        string description = "Please separate the hour and the minutes by a colon(:)";
+        char separator = ':';
+
+        system("CLS");
+
+        cout << "\n\n" << leftSpace << question1 << "\n" << leftSpace << description << "\n" << leftSpace;
+        cin >> userInput1;
+
+        while(!inputInRange(range, removeChar (userInput1 , separator) )){
+            system("CLS");
+            cout << "\n\n" << leftSpace << errorMessage << "\n" << leftSpace << question1 << "\n" << leftSpace << description << "\n" << leftSpace;
+            cin >> userInput1;
+        }
+
+        workingHour.startTime = stoi(removeChar (userInput1 , separator));
+
+        cout << "\n\n" << leftSpace << question2 << "\n" << leftSpace << description << "\n" << leftSpace;
+        cin >> userInput2;
+
+        while(!inputInRange(range, removeChar (userInput2 , separator) )){
+            //while(!inputInRange(range, removeChar (userInput2 , separator) ) || workingHour.startTime > workingHour.endTime){
+
+            //if ( workingHour.startTime > workingHour.endTime ) {
+            //    system("CLS");
+            //    cout << "\n\n" << leftSpace << question1 << "\n" << leftSpace << description << "\n" << leftSpace << userInput1;
+            //    cout << "\n\n" << leftSpace << secondErrorMessage << "\n" << leftSpace << question2 << "\n" << leftSpace << description << "\n" << leftSpace;
+            //    cin >> userInput2;
+            //}
+
+            //else{
+                system("CLS");
+                cout << "\n\n" << leftSpace << question1 << "\n" << leftSpace << description << "\n" << leftSpace << userInput1;
+                cout << "\n\n" << leftSpace << errorMessage << "\n" << leftSpace << question2 << "\n" << leftSpace << description << "\n" << leftSpace;
+                cin >> userInput2;
+            //}
+
+        }
+
+        workingHour.endTime = stoi(removeChar (userInput2 , separator));
+
+        cout << "\n\n" << leftSpace << question3 << "\n" << leftSpace;
+        cin >> userInput3;
+
+        while(!listContains(commands, userInput3)){
+            system("CLS");
+            cout << "\n\n" << leftSpace << question1 << "\n" << leftSpace << description << "\n" << leftSpace << userInput1;
+            cout << "\n\n" << leftSpace << question2 << "\n" << leftSpace << description << "\n" << leftSpace << userInput2;
+            cout << "\n\n" << leftSpace << errorMessage << "\n" << leftSpace << question3 << "\n" << leftSpace;
+            cin >> userInput3;
+        }
+
+        workingHour.isPresent = userInput3 == "p";
+
+        //day = std::stoi( userInput );
+        //cout << "\n\n" << leftSpace << workingHour.startTime << leftSpace << workingHour.endTime << leftSpace << to_string(workingHour.isPresent);
+        SQLiteManager sqliteManager;
+        if(sqliteManager.addEmployeeWorkingHour( employee.id, formatDate(), workingHour.startTime, workingHour.endTime, workingHour.isPresent )){
+            displayState(3);
+        }
+        //displayState(3);
+
+    }
+
+    string formatDate(){
+        return to_string(day) +"-" + to_string(calendar.getCurrentMonth()) + "-" + to_string(calendar.getYear());
+    }
+
+    string formatDateForDisplay(){
+        return to_string(day) +"-" + to_string(calendar.getCurrentMonth() + 1) + "-" + to_string(calendar.getYear());
+    }
+
+    string removeChar(string input, char separator){
+
+        string toBeReturned = "";
+        int separatorOccurence = 0;
+
+        for (int i = 0; i < input.length(); i++) {
+
+            if( input[i] != separator ){
+              toBeReturned += input[i];
+            }
+            else{
+                separatorOccurence ++;
+            }
+
+        }
+
+        if(separatorOccurence != 1){
+            return "-1";
+        }
+
+        return toBeReturned;
     }
 
     void goToEmptyWorkingHours(){
-        // SQLiteManager sqliteManager = SQLiteManager();
-        // list<Employee> employees = sqliteManager.getAllEmployees();
-        // displayEmployees(employees);
+        string userInput = "";
+        list<string> commands = {"add", "back"};
+        string errorMessage = "Invalid Input";
+
+        system("CLS");
+        cout << "\n" << leftSpace << titleMarker << "No working hour for " << employee.name << " on " << formatDateForDisplay()
+             <<  titleMarker << "\n\n\n" << leftSpace << "Enter 'add' to add a working hour\n" << leftSpace;
+        cin >> userInput;
+
+        while(!listContains(commands, userInput)){
+            system("CLS");
+            cout << "\n" << leftSpace << titleMarker << "No working hour for " << employee.name << " on " << formatDateForDisplay()
+                 <<  titleMarker << "\n\n" << leftSpace << errorMessage << "\n" << leftSpace << "Enter 'add' to add a working hour\n" << leftSpace;
+            cin >> userInput;
+        }
+
+        if (userInput == "add"){
+            displayState(4);
+        }
+        else{
+            displayState(2);
+        }
+
+    }
+
+    void goToEditWorkingHour(){
+        string userInput1 = "";
+        string userInput2 = "";
+        string userInput3 = "";
+        list<string> commands = {"a", "p"};
+        int range[] = {0, 2400};
+        string question1 = "Edit the start time of " + employee.name + " on the " + to_string(day) + " "+ calendar.getCurrentMonthName() + " " + to_string(calendar.getYear());
+        string question2 = "Edit the end time of " + employee.name + " on the " + to_string(day) + " "+ calendar.getCurrentMonthName() + " " + to_string(calendar.getYear());
+        string question3 = "Enter 'p' for present or 'a' for absent";
+        string errorMessage = "Invalid Input";
+        string secondErrorMessage = "The start time cannot be greater than the end time";
+        string description = "Please separate the hour and the minutes by a colon(:)";
+        char separator = ':';
+
+        system("CLS");
+
+        cout << "\n\n" << leftSpace << question1 << "\n" << leftSpace << description << "\n\n" << leftSpace << "previous start time: "
+             << formatTime(workingHour.startTime) << "\n" << leftSpace << "new start time: ";
+
+        cin >> userInput1;
+
+        while(!inputInRange(range, removeChar (userInput1 , separator) )){
+
+            system("CLS");
+
+            cout << "\n\n" << leftSpace << errorMessage << "\n" << leftSpace << question1 << "\n" << leftSpace << description << "\n\n" << leftSpace << "previous start time: "
+                 << formatTime(workingHour.startTime) << "\n" << leftSpace << "new start time: ";
+
+            cin >> userInput1;
+
+        }
+
+        cout << "\n\n" << leftSpace << question2 << "\n" << leftSpace << description << "\n\n" << leftSpace << "previous end time: "
+             << formatTime(workingHour.endTime) << "\n" << leftSpace << "new end time: ";
+
+        cin >> userInput2;
+
+        while(!inputInRange(range, removeChar (userInput2 , separator) )){
+
+            system("CLS");
+
+            cout << "\n\n" << leftSpace << question1 << "\n" << leftSpace << description << "\n\n" << leftSpace << "previous start time: "
+                 << formatTime(workingHour.startTime) << "\n" << leftSpace << "new start time: " << userInput1;
+
+            cout << "\n\n" << leftSpace << errorMessage << "\n" << leftSpace << question2 << "\n" << leftSpace << description << "\n\n" << leftSpace << "previous end time: "
+                 << formatTime(workingHour.endTime) << "\n" << leftSpace << "new end time: ";
+
+            cin >> userInput2;
+
+        }
+
+        cout << "\n\n" << leftSpace << question3 << "\n" << leftSpace << "previous presence: "
+             << formatPresence(workingHour.isPresent) << "\n\n" << leftSpace << "new presence: ";
+        cin >> userInput3;
+
+        while(!listContains(commands, userInput3)){
+            system("CLS");
+            cout << "\n\n" << leftSpace << question1 << "\n" << leftSpace << description << "\n\n" << leftSpace << "previous start time: "
+                 << formatTime(workingHour.startTime) << "\n" << leftSpace << "new start time: " << userInput1;
+
+            cout << "\n\n\n" << leftSpace << question2 << "\n" << leftSpace << description << "\n\n" << leftSpace << "previous end time: "
+                 << formatTime(workingHour.endTime) << "\n" << leftSpace << "new end time: " << userInput2;
+
+            cout << "\n\n\n" << leftSpace << errorMessage << "\n" << leftSpace << question3 << "\n" << leftSpace << "previous presence: "
+                 << formatPresence(workingHour.isPresent) << "\n\n" << leftSpace << "new presence: ";
+
+            cin >> userInput3;
+        }
+
+        workingHour.startTime = stoi(removeChar (userInput1 , separator));
+        workingHour.endTime = stoi(removeChar (userInput2 , separator));
+        workingHour.isPresent = userInput3 == "p";
+
+        //day = std::stoi( userInput );
+        //cout << "\n\n" << leftSpace << workingHour.startTime << leftSpace << workingHour.endTime << leftSpace << to_string(workingHour.isPresent);
+        SQLiteManager sqliteManager;
+        if(sqliteManager.editEmployeeWorkingHour( workingHour.id, employee.id, formatDate(), workingHour.startTime, workingHour.endTime, workingHour.isPresent )){
+            displayState(3);
+        }
+        //displayState(3);
     }
 
     void goToStartNEndTime(){
-        // SQLiteManager sqliteManager = SQLiteManager();
-        // list<Employee> employees = sqliteManager.getAllEmployees();
-        // displayEmployees(employees);
+        SQLiteManager sqliteManager = SQLiteManager();
+        list<Employee> employees = sqliteManager.getAllEmployees();
+        displayEmployees(employees);
     }
 
     void displayEmployees(list<Employee> employees){
@@ -485,6 +963,15 @@ class StaffWorkingHours{
         int i = 1;
         for(Employee employee: employees){
             displayEmployee(employee, i);
+            i++;
+        }
+    }
+
+    void displayWorkingHours(list<WorkingHour> workingHours){
+        cout << "\n" << leftSpace << titleMarker << "List of working hours for " << employee.name << " on " << formatDateForDisplay() << titleMarker << "\n\n";
+        int i = 1;
+        for(WorkingHour workingHour: workingHours){
+            displayWorkingHour(workingHour, i);
             i++;
         }
     }
@@ -513,11 +1000,21 @@ class StaffWorkingHours{
             }
 
             case 4: {
-                goToEmptyWorkingHours();
+                goToAddWorkingHour();
                 break;
             }
 
             case 5: {
+                goToEditWorkingHour();
+                break;
+            }
+
+            case 6: {
+                goToEmptyWorkingHours();
+                break;
+            }
+
+            case 7: {
                 goToStartNEndTime();
                 break;
             }
@@ -550,7 +1047,7 @@ public:int main(int argc, char *argv[])
 int main(int argc, char *argv[])
 {
     //SQLiteManager sqliteManager = SQLiteManager();
-    //sqliteManager.addEmployee("Jayson", "6557578");
+    //sqliteManager.addEmployee("Florian", "654896897");
     //list<Employee> employees = sqliteManager.getAllEmployees();
     //displayState(0);
     //displayEmployees(employees);
