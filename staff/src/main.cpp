@@ -949,7 +949,6 @@ class StaffWorkingHours{
         if(sqliteManager.editEmployeeWorkingHour( workingHour.id, employee.id, formatDate(), workingHour.startTime, workingHour.endTime, workingHour.isPresent )){
             displayState(3);
         }
-        //displayState(3);
     }
 
     void goToStartNEndTime(){
