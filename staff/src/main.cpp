@@ -980,7 +980,7 @@ class StaffWorkingHours{
         switch (state) {
             case 0: {
                 goToHome();
-                brea;
+                break;
             }
 
             case 1: {
